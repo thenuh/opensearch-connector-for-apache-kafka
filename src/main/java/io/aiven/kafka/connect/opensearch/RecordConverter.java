@@ -45,6 +45,7 @@ import org.apache.kafka.connect.storage.Converter;
 
 import org.opensearch.action.DocWriteRequest;
 import org.opensearch.action.delete.DeleteRequest;
+import org opensearch.action.update.UpdateRequest;
 import org.opensearch.action.index.IndexRequest;
 import org.opensearch.common.xcontent.XContentType;
 import org.opensearch.index.VersionType;
@@ -142,10 +143,21 @@ public class RecordConverter {
         }
 
         final String payload = getPayload(record);
-        return addExternalVersionIfNeeded(new IndexRequest(index)
-                .id(id)
-                .source(payload, XContentType.JSON)
-                .opType(DocWriteRequest.OpType.INDEX), record);
+
+        switch(config.writeMethod()) {
+            case UPSERT:
+	        return new UpdateRequest(index, id)
+                    .doc(payload, XContentType.JSON)
+                    .upsert(payload, XContentType.JSON)
+                    .retryOnConflict(Math.min(config.maxInFlightRequests(), 5));
+            case INSERT:
+                return addExternalVersionIfNeeded(new IndexRequest(index)
+                    .id(id)
+                    .source(payload, XContentType.JSON)
+                    .opType(DocWriteRequest.OpType.INDEX), record);
+            default:
+                return null; // shouldn't happen
+        }
     }
 
     private DocWriteRequest<?> addExternalVersionIfNeeded(final DocWriteRequest<?> request, final SinkRecord record) {
@@ -404,6 +416,55 @@ public class RecordConverter {
         }
 
         public static BehaviorOnNullValues forValue(final String value) {
+            return valueOf(value.toUpperCase(Locale.ROOT));
+        }
+
+        @Override
+        public String toString() {
+            return name().toLowerCase(Locale.ROOT);
+        }
+    }
+
+    public enum WriteMethod {
+        INSERT,
+        UPSERT;
+
+        public static final WriteMethod DEFAULT = INSERT;
+
+        // Want values for "write.method" property to be case-insensitive
+        public static final ConfigDef.Validator VALIDATOR = new ConfigDef.Validator() {
+            private final ConfigDef.ValidString validator = ConfigDef.ValidString.in(names());
+
+            @Override
+            public void ensureValid(final String name, final Object value) {
+                if (value instanceof String) {
+                    final String lowerStringValue = ((String) value).toLowerCase(Locale.ROOT);
+                    validator.ensureValid(name, lowerStringValue);
+                } else {
+                    validator.ensureValid(name, value);
+                }
+            }
+
+            // Overridden here so that ConfigDef.toEnrichedRst shows possible values correctly
+            @Override
+            public String toString() {
+                return validator.toString();
+            }
+
+        };
+
+        public static String[] names() {
+            final WriteMethod[] behaviors = values();
+            final String[] result = new String[behaviors.length];
+
+            for (int i = 0; i < behaviors.length; i++) {
+                result[i] = behaviors[i].toString();
+            }
+
+            return result;
+        }
+
+        public static WriteMethod forValue(final String value) {
             return valueOf(value.toUpperCase(Locale.ROOT));
         }
 

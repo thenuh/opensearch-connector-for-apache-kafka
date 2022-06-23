@@ -125,6 +125,42 @@ public class OpensearchSinkConnectorIT extends AbstractIT {
         }
     }
 
+    @Test
+    public void testUpsert() throws Exception {
+	final var props = connectorProperties();
+        props.put(WRITE_METHOD_CONFIG, OpensearchSinkConnectorConfig.WriteMethod.UPSERT.toString());
+        props.put(IGNORE_KEY_CONFIG, "false");
+        connect.configureConnector(CONNECTOR_NAME, props);
+        waitForConnectorToStart(CONNECTOR_NAME, 1);
+
+        writeRecords(10);
+
+        waitForRecords(10);
+
+        for (final var hit : search()) {
+            final var id = (Integer) hit.getSourceAsMap().get("doc_num");
+            final var version = (Integer) hit.getSourceAsMap().get("_version");
+            assertNotNull(id);
+            assertTrue(version == 1);
+            assertTrue(id < 10);
+            assertEquals(TOPIC_NAME, hit.getIndex());
+        }
+
+        writeRecords(10);
+
+        waitForRecords(10);
+
+        for (final var hit : search()) {
+            final var id = (Integer) hit.getSourceAsMap().get("doc_num");
+            final var version = (Integer) hit.getSourceAsMap().get("_version");
+            assertNotNull(id);
+            assertTrue(version == 2);
+            assertTrue(id < 10);
+            assertEquals(TOPIC_NAME, hit.getIndex());
+        }
+
+    }
+
     void writeRecords(final int numRecords) {
         for (int i = 0; i < numRecords; i++) {
             connect.kafka().produce(

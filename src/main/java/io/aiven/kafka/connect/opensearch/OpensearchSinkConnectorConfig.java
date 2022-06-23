@@ -155,6 +155,20 @@ public class OpensearchSinkConnectorConfig extends AbstractConfig {
             + " mapping conflict or a field name containing illegal characters. Valid options are "
             + "'ignore', 'warn', and 'fail'.";
 
+    public static final String WRITE_METHOD_CONFIG = "write.method";
+    private static final String WRITE_METHOD_DOC = String.format(
+        "Method used for writing data to Opensearch, and one of INSERT or UPSERT. The default method is"
+            + " INSERT, in which the connector constructs a document from the record value and inserts"
+            + " that document into Elasticsearch, completely replacing any existing document with the"
+            + " same ID; this matches previous behavior. The UPSERT method will create a new document if"
+            + " one with the specified ID does not yet exist, or will update an existing document"
+            + " with the same ID by adding/replacing only those fields present in the record value."
+            + " The UPSERT method may require additional time and resources of Elasticsearch, so consider"
+            + " increasing the %s and decreasing the %s configuration properties.",
+        READ_TIMEOUT_MS_CONFIG,
+        BATCH_SIZE_CONFIG
+    );
+
     protected static ConfigDef baseConfigDef() {
         final ConfigDef configDef = new ConfigDef();
         addConnectorConfigs(configDef);
@@ -295,7 +309,18 @@ public class OpensearchSinkConnectorConfig extends AbstractConfig {
                 group,
                 ++order,
                 Width.SHORT,
-                "Read Timeout");
+                "Read Timeout"
+        ).define(
+                WRITE_METHOD,
+                Type.STRING,
+                BulkProcessor.WriteMethod.DEFAULT.toString(),
+                BulkProcessor.WriteMethod.VALIDATOR,
+                Importance.HIGH,
+                group,
+                ++order,
+                Width.SHORT,
+                "Write Method",
+                );
     }
 
     private static void addConversionConfigs(final ConfigDef configDef) {
@@ -513,6 +538,12 @@ public class OpensearchSinkConnectorConfig extends AbstractConfig {
     public RecordConverter.BehaviorOnNullValues behaviorOnNullValues() {
         return RecordConverter.BehaviorOnNullValues.forValue(
                 getString(OpensearchSinkConnectorConfig.BEHAVIOR_ON_NULL_VALUES_CONFIG)
+        );
+    }
+
+    public RecordConverter.WriteMethod writeMethod() {
+        return RecordConverter.WriteMethod.forValue(
+                getString(OpensearchSinkConnectorConfig.WRITE_METHOD_CONFIG)
         );
     }
 
