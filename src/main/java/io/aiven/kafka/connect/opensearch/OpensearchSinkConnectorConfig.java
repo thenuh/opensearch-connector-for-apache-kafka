@@ -319,7 +319,7 @@ public class OpensearchSinkConnectorConfig extends AbstractConfig {
                 group,
                 ++order,
                 Width.SHORT,
-                "Write Method",
+                "Write Method"
                 );
     }
 
