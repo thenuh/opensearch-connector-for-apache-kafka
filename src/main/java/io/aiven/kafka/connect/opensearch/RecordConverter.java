@@ -148,8 +148,9 @@ public class RecordConverter {
             case UPSERT:
                 return new UpdateRequest(index, id)
                     .doc(payload, XContentType.JSON)
-                    .upsert(payload, XContentType.JSON)
-                    .retryOnConflict(Math.min(config.maxInFlightRequests(), 5));
+                    .upsert(payload, XContentType.JSON);
+                    // Retry is handled by BulkProcessor?
+                    //.retryOnConflict(Math.min(config.maxInFlightRequests(), 5));
             case INSERT:
                 return addExternalVersionIfNeeded(new IndexRequest(index)
                     .id(id)
