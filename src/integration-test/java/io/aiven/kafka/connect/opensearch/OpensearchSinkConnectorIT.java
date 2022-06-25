@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import static io.aiven.kafka.connect.opensearch.OpensearchSinkConnectorConfig.KEY_IGNORE_CONFIG;
 import static io.aiven.kafka.connect.opensearch.OpensearchSinkConnectorConfig.SCHEMA_IGNORE_CONFIG;
+import static io.aiven.kafka.connect.opensearch.OpensearchSinkConnectorConfig.WRITE_METHOD_CONFIG;
 import static org.apache.kafka.connect.json.JsonConverterConfig.SCHEMAS_ENABLE_CONFIG;
 import static org.apache.kafka.connect.runtime.ConnectorConfig.CONNECTOR_CLASS_CONFIG;
 import static org.apache.kafka.connect.runtime.ConnectorConfig.KEY_CONVERTER_CLASS_CONFIG;
@@ -127,9 +128,9 @@ public class OpensearchSinkConnectorIT extends AbstractIT {
 
     @Test
     public void testUpsert() throws Exception {
-	final var props = connectorProperties();
-        props.put(WRITE_METHOD_CONFIG, OpensearchSinkConnectorConfig.WriteMethod.UPSERT.toString());
-        props.put(IGNORE_KEY_CONFIG, "false");
+        final var props = connectorProperties();
+        props.put(WRITE_METHOD_CONFIG, RecordConverter.WriteMethod.UPSERT.toString());
+        props.put(KEY_IGNORE_CONFIG, "false");
         connect.configureConnector(CONNECTOR_NAME, props);
         waitForConnectorToStart(CONNECTOR_NAME, 1);
 

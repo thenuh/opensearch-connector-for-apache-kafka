@@ -311,16 +311,17 @@ public class OpensearchSinkConnectorConfig extends AbstractConfig {
                 Width.SHORT,
                 "Read Timeout"
         ).define(
-                WRITE_METHOD,
+                WRITE_METHOD_CONFIG,
                 Type.STRING,
-                BulkProcessor.WriteMethod.DEFAULT.toString(),
-                BulkProcessor.WriteMethod.VALIDATOR,
+                RecordConverter.WriteMethod.DEFAULT.toString(),
+                RecordConverter.WriteMethod.VALIDATOR,
                 Importance.HIGH,
+                WRITE_METHOD_DOC,
                 group,
                 ++order,
                 Width.SHORT,
                 "Write Method"
-                );
+        );
     }
 
     private static void addConversionConfigs(final ConfigDef configDef) {

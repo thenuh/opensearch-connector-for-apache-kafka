@@ -45,8 +45,8 @@ import org.apache.kafka.connect.storage.Converter;
 
 import org.opensearch.action.DocWriteRequest;
 import org.opensearch.action.delete.DeleteRequest;
-import org opensearch.action.update.UpdateRequest;
 import org.opensearch.action.index.IndexRequest;
+import org.opensearch.action.update.UpdateRequest;
 import org.opensearch.common.xcontent.XContentType;
 import org.opensearch.index.VersionType;
 
@@ -144,9 +144,9 @@ public class RecordConverter {
 
         final String payload = getPayload(record);
 
-        switch(config.writeMethod()) {
+        switch (config.writeMethod()) {
             case UPSERT:
-	        return new UpdateRequest(index, id)
+                return new UpdateRequest(index, id)
                     .doc(payload, XContentType.JSON)
                     .upsert(payload, XContentType.JSON)
                     .retryOnConflict(Math.min(config.maxInFlightRequests(), 5));
