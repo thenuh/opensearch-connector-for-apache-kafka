@@ -360,6 +360,10 @@ public class BulkProcessor {
                         return response;
                     }
                     for (final var itemResponse : response.getItems()) {
+                        // itemResponse.getFailure() can be null if specific item didn't fail?
+                        if (itemResponse.getFailure() == null) {
+                            continue;
+                        }
                         if (!itemResponse.getFailure().isAborted()) {
                             if (responseContainsMalformedDocError(itemResponse)) {
                                 handleMalformedDoc(itemResponse);
